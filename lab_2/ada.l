@@ -20,6 +20,7 @@ char *strnncpy(char *dst, const char *src, const int n);
 		/* komentarze */
     /* "--"[^\n]* ; */
     /* z warunkami poczatkowymi */
+
 <INITIAL>-- {
     BEGIN(KOMENTARZ);
 }
@@ -27,10 +28,6 @@ char *strnncpy(char *dst, const char *src, const int n);
     /* Ignoruj wszystko aż do końca linii */
 <KOMENTARZ>[^"\n]* {
     ;
-}
-
-<KOMENTARZ>"""" {
-    printf("Znaleziono dwa cudzysłowy w komentarzu: %s\n", yytext);
 }
 
 <KOMENTARZ>\n {
@@ -55,12 +52,12 @@ char *strnncpy(char *dst, const char *src, const int n);
 <NAPIS>\"\" {
   fprintf(stderr, "Cudzyslowia w napisie!\n"); 
   BEGIN(INITIAL);
-}
+} 
 
 
 <NAPIS>. {
-    // Zgromadzenie znaków w napisie
-    yymore();
+  // Zgromadzenie znaków w napisie
+  yymore();
 }
 
 <NAPIS>\n {
@@ -78,20 +75,21 @@ char *strnncpy(char *dst, const char *src, const int n);
 [0-9]+\.[0-9]+(e[+-]?[0-9]+)?	 { return process_token(yytext, "FLOAT_CONST", yytext, FLOAT_CONST); }
 
 	/* słowa kluczowe KW_słowo */
-with	{ return process_token(yytext, "KW_WITH", "", KW_WITH); }
-use         { return process_token(yytext, "KW_USE", "", KW_USE); }
-procedure   { return process_token(yytext, "KW_PROCEDURE", "", KW_PROCEDURE); }
-is          { return process_token(yytext, "KW_IS", "", KW_IS); }
-package     { return process_token(yytext, "KW_PACKAGE", "", KW_PACKAGE); }
-end         { return process_token(yytext, "KW_END", "", KW_END); }
-begin       { return process_token(yytext, "KW_BEGIN", "", KW_BEGIN); }
-constant    { return process_token(yytext, "KW_CONSTANT", "", KW_CONSTANT); }
-record      { return process_token(yytext, "KW_RECORD", "", KW_RECORD); }
-loop        { return process_token(yytext, "KW_LOOP", "", KW_LOOP); }
-for         { return process_token(yytext, "KW_FOR", "", KW_FOR); }
-if          { return process_token(yytext, "KW_IF", "", KW_IF); }
-then        { return process_token(yytext, "KW_THEN", "", KW_THEN); }
-else        { return process_token(yytext, "KW_ELSE", "", KW_ELSE); }
+  /* ?i - case insensitive - same as With|WITH|with */
+(?i:with)     	{ return process_token(yytext, "KW_WITH", "", KW_WITH); }
+(?i:use)         { return process_token(yytext, "KW_USE", "", KW_USE); }
+(?i:procedure)   { return process_token(yytext, "KW_PROCEDURE", "", KW_PROCEDURE); }
+(?i:is)          { return process_token(yytext, "KW_IS", "", KW_IS); }
+(?i:package)     { return process_token(yytext, "KW_PACKAGE", "", KW_PACKAGE); }
+(?i:end)         { return process_token(yytext, "KW_END", "", KW_END); }
+(?i:begin)       { return process_token(yytext, "KW_BEGIN", "", KW_BEGIN); }
+(?i:constant)    { return process_token(yytext, "KW_CONSTANT", "", KW_CONSTANT); }
+(?i:record)      { return process_token(yytext, "KW_RECORD", "", KW_RECORD); }
+(?i:loop)        { return process_token(yytext, "KW_LOOP", "", KW_LOOP); }
+(?i:for)         { return process_token(yytext, "KW_FOR", "", KW_FOR); }
+(?i:if)          { return process_token(yytext, "KW_IF", "", KW_IF); }
+(?i:then)        { return process_token(yytext, "KW_THEN", "", KW_THEN); }
+(?i:else)        { return process_token(yytext, "KW_ELSE", "", KW_ELSE); }
 
 	/* identyfikatory */
 [a-zA-Z][a-zA-Z0-9_]*   { return process_token(yytext, "IDENT", yytext, IDENT); }
@@ -103,7 +101,7 @@ else        { return process_token(yytext, "KW_ELSE", "", KW_ELSE); }
 "<="         { return process_token(yytext, "LE", "", LE); }
 
 	/* pozostałe znaki - identyfikatorem jest kod znaku */
-[\.;\(\)*+-:'=,]	return process_token(yytext, yytext, "", yytext[0]);
+[\.;\(\)*+-:'=,`]	return process_token(yytext, yytext, "", yytext[0]);
 
 %%
 
