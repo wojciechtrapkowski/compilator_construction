@@ -314,14 +314,19 @@ PROCEDURE_CALL:
    | NAME ';' {
       found("PROCEDURE_CALL", $1);
    }
-   | IDENT ';' {
+   | NAME '\'' IDENT '(' EXPR_LIST ')' ';' {
+      found("PROCEDURE_CALL", $1);
+   }
+   | NAME '\'' IDENT ';' {
       found("PROCEDURE_CALL", $1);
    };
 
 // SKIPPED:
-// REPLACE BY ATTRIBUTE_REF
 /* TYPE_ATTR */
 /* Either empty, or an apostrophe followed by identifier */
+// TYPE_ATTR:
+//    /* nothng */ | '\'' IDENT ;
+// Unrolled it in procedure_call, because it doesnt work with it, probably due to disambiguity.
 
 // THIS IS EXPR_LIST - therefore redundant
 /* ACTUAL_PARAM_LIST */
