@@ -1,14 +1,14 @@
 %{
-#include	<stdio.h>
-#include	<string.h>
-#define MAX_STR_LEN	100
-  void found( const char *nonterminal, const char *value );
-  int yylex(void);
-  void yyerror(const char *txt);
+#include <stdio.h>
+#include <string.h>
+#define MAX_STR_LEN 100
+void found(const char *nonterminal, const char *value);
+int yylex(void);
+void yyerror(const char *txt);
 %}
 
 %union {
-  char s[ MAX_STR_LEN + 1 ];
+  char s[MAX_STR_LEN + 1];
   int i;
   double d;
 }
@@ -18,39 +18,40 @@
 %token <i> KW_BEGIN KW_END KW_FOR KW_IN KW_RANGE KW_LOOP
 %token <i> KW_PACKAGE KW_BODY KW_OUT KW_IF KW_THEN KW_ELSE
 %token <i> KW_ARRAY KW_RECORD KW_DOWNTO KW_OF
+
 /* literal values */
 %token <s> STRING_CONST
 %token <i> INTEGER_CONST
 %token <d> FLOAT_CONST
 %token <i> CHARACTER_CONST
+
 /* operators */
 %token <i> ASSIGN RANGE LE GE
+
 /* other */
 %token <s> IDENT
 
- /* nonterminals */
+/* nonterminals */
 %type <s> PROC_DEFINITION PROC_HEADER PROC_DECL PACKAGE_DECL PACKAGE_BODY
 %type <s> VAR_DECL BLOCK PROCEDURE_CALL NAME IDENT_LIST
 
- /* set precedence and associativity rules */
+/* set precedence and associativity rules */
 %left '+' '-'
 %left '*' '/'
 %right NEG
 
 %%
 
- /* GRAMMAR */
- /* Grammar contains context specifcations (CONTEXT_SPECS) followed
+/* GRAMMAR */
+/* Grammar contains context specifcations (CONTEXT_SPECS) followed
     by procedure definition (PROC_DEFINITION). It can also be empty.
     Everything else is an error. */
-Grammar: CONTEXT_SPECS PROC_DEFINITION | /*{ yyerror( "Empty input source is not valid!" ); YYERROR; }*/ | error;
-
+Grammar: CONTEXT_SPECS PROC_DEFINITION | error;
 
 /* CONTEXT_SPECS */
 /* Context specifications is a possibly empty sequence of context specifications
    (CONTEXT_SPEC) */
-CONTEXT_SPECS:
-   /* nothing */ | CONTEXT_SPECS CONTEXT_SPEC;
+CONTEXT_SPECS: /* nothing */ | CONTEXT_SPECS CONTEXT_SPEC;
 
 /* CONTEXT_SPEC */
 /* Context specification consists of a with clause (WITH_CLAUSE) followed
@@ -58,11 +59,10 @@ CONTEXT_SPECS:
 CONTEXT_SPEC:
    WITH_CLAUSE {
       found("CONTEXT_SPEC", "");
-   };
-      | WITH_CLAUSE USE_CLAUSE {
+   } 
+   | WITH_CLAUSE USE_CLAUSE {
       found("CONTEXT_SPEC", "");
    };
-
 
 /* WITH_CLAUSE */
 /* With clause starts with the keyword with followed by a list of names
@@ -73,13 +73,11 @@ WITH_CLAUSE:
    };
 
 /* NAME_LIST */
-/* Match one or more names, seperated by comas */
-NAME_LIST:
-   NAME | NAME_LIST ',' NAME;
 /* List of names (NAME) separated with commas */
+NAME_LIST: NAME | NAME_LIST ',' NAME;
 
 /* NAME */
-/* Match an identifier or a sequence of identifiers seprated by dots */
+/* List of identifiers separated with dots */
 NAME:
    IDENT { 
       strncpy($$, $1, MAX_STR_LEN);
@@ -87,6 +85,7 @@ NAME:
    | NAME '.' IDENT {
       snprintf($$, MAX_STR_LEN, "%s.%s", $1, $3);
    };
+
 /* USE_CLAUSE */
 /* Keyword use followed by a list of names (NAME_LIST) and a semicolon */
 USE_CLAUSE:
@@ -107,11 +106,11 @@ PROC_DEFINITION:
    (FORMAL_PARAM_LIST) in parentheses */
 PROC_HEADER: 
    KW_PROCEDURE IDENT {
-      strncpy($$, $2, MAX_STR_LEN);  /* Store the procedure name */
+      strncpy($$, $2, MAX_STR_LEN);
       found("PROC_HEADER", $2);
    } 
    | KW_PROCEDURE IDENT '(' FORMAL_PARAM_LIST ')' {
-      strncpy($$, $2, MAX_STR_LEN);  /* Store the procedure name */
+      strncpy($$, $2, MAX_STR_LEN);
       found("PROC_HEADER", $2);
    };
 
@@ -144,7 +143,8 @@ DECLS:
    or with clause (WITH_CLAUSE),
    or use clause (USE_CLAUSE) */
 DECL: 
-   PACKAGE_DECL | PACKAGE_BODY | PROC_DEFINITION | VAR_DECL | CONST_DECL | WITH_CLAUSE | USE_CLAUSE;
+   PACKAGE_DECL | PACKAGE_BODY | PROC_DEFINITION | VAR_DECL | 
+   CONST_DECL | WITH_CLAUSE | USE_CLAUSE;
 
 /* PACKAGE_DECL */
 /* Keyword package, followed by identifierm keyword is,
@@ -172,7 +172,7 @@ PROC_DECL:
    declarations (DECLS), keyword end, identifier, and semicolon. */
 PACKAGE_BODY: 
    KW_PACKAGE KW_BODY IDENT KW_IS DECLS KW_END IDENT ';' {
-	   found("PACKAGE_BODY", $3);
+      found("PACKAGE_BODY", $3);
    };
 
 /* VAR_DECL */
@@ -180,7 +180,7 @@ PACKAGE_BODY:
    (INITIALIZATION), and semicolon */
 VAR_DECL:  
    IDENT_LIST ':' TYPE INITIALIZATION ';' {
-	   found("VAR_DECL", $1);
+      found("VAR_DECL", $1);
    };
 
 /* IDENT_LIST */
@@ -197,13 +197,16 @@ IDENT_LIST:
    or:
    keyword record, fields (FIELDS), keyword end, and keyword record. */
 TYPE:
-   IDENT | KW_ARRAY '(' DIMENSIONS ')' KW_OF TYPE | KW_RECORD FIELDS KW_END KW_RECORD;
+   IDENT | 
+   KW_ARRAY '(' DIMENSIONS ')' KW_OF TYPE | 
+   KW_RECORD FIELDS KW_END KW_RECORD;
 
 /* DIMENSIONS */
 /* Non-empty, comma separated list of:
    constant value (CONST_VALUE), range operator (RANGE), and constant value. */
 DIMENSIONS:
-   CONST_VALUE RANGE CONST_VALUE | DIMENSIONS CONST_VALUE RANGE CONST_VALUE;
+   CONST_VALUE RANGE CONST_VALUE | 
+   DIMENSIONS CONST_VALUE RANGE CONST_VALUE;
 
 /* CONST_VALUE */
 /* Integer or character constant */
@@ -242,28 +245,20 @@ INITIALIZATION:
    or: procedure call (PROCEDURE_CALL),
    or: sum, difference, product, or quotient of two expressions,
    or: negative expression (unary minus, set appropriate precendece!) */
-EXPR: 
-   IDENT 
-   | INTEGER_CONST 
-   | FLOAT_CONST 
-   | CHARACTER_CONST 
-   | STRING_CONST 
-   | '(' EXPR ')' 
-   | ATTRIBUTE_REF 
-   | NAME TAB_TAIL
-   | EXPR '+' EXPR 
-   | EXPR '-' EXPR 
-   | EXPR '*' EXPR 
-   | EXPR '/' EXPR 
-   | '-' EXPR;
 
+EXPR: 
+   INTEGER_CONST | FLOAT_CONST | CHARACTER_CONST | 
+   STRING_CONST | '(' EXPR ')' | ATTRIBUTE_REF | NAME TAB_TAIL |
+   EXPR '+' EXPR | EXPR '-' EXPR | EXPR '*' EXPR | EXPR '/' EXPR | 
+   '-' EXPR;
+
+/* ATTRIBUTE_REF */
+/* This is added by me to match cases like: 
+Character'Succ(Uc) or Character'Succ
+*/
 ATTRIBUTE_REF:
-    NAME '\'' IDENT '(' EXPR ')' {
-        /* For cases like Character'Succ(Uc) */
-    }
-    | NAME '\'' IDENT {
-        /* For cases without parameters */
-    };
+   NAME '\'' IDENT '(' EXPR ')' |
+   NAME '\'' IDENT;
 
 /* BLOCK */
 /* Keyword begin, instructions (STATEMENTS), keyword end, and identifier */
@@ -284,19 +279,20 @@ STATEMENTS:
    printed as PROCEDURE_CALL,
    or: for loop (FOR_LOOP),
    or: conditional instruction (IF_STATEMENT) */
+
 STATEMENT:
-    NAME TAB_TAIL ASSIGN EXPR ';' {
-        found("ASSIGNMENT", $1);
-    }
-    | PROCEDURE_CALL 
-    | FOR_LOOP 
-    | IF_STATEMENT;
+   NAME TAB_TAIL ASSIGN EXPR ';' {
+      found("ASSIGNMENT", $1);
+   }
+   | PROCEDURE_CALL 
+   | FOR_LOOP 
+   | IF_STATEMENT;
 
 /* TAB_TAIL */
 /* Either empty or expression list (EXPR_LIST) in parentheses followed
    by record fields (FIELD_TAIL) */
 TAB_TAIL:
-   /* noting */ | '(' EXPR_LIST  ')' FIELD_TAIL;
+   /* nothing */ | '(' EXPR_LIST ')' FIELD_TAIL;
 
 /* FIELD_TAIL */
 /* Either empty, or a dot, identifier and table part (TAB_TAIL) */
@@ -312,40 +308,38 @@ EXPR_LIST:
 /* name (NAME), type attribute (TYPE_ATTR) followed by optional
    list of actual parameters (ACTTUAL_PARAM_LIST) in parentheses */
 PROCEDURE_CALL: 
-    NAME '(' EXPR_LIST ')' ';' {
-        found("PROCEDURE_CALL", $1);
-    }
-    | NAME ';' {
-        found("PROCEDURE_CALL", $1);
-    }
-    | IDENT ';' {  /* Add this case for simple procedure calls without parameters */
-        found("PROCEDURE_CALL", $1);
-    };
+   NAME '(' EXPR_LIST ')' ';' {
+      found("PROCEDURE_CALL", $1);
+   }
+   | NAME ';' {
+      found("PROCEDURE_CALL", $1);
+   }
+   | IDENT ';' {
+      found("PROCEDURE_CALL", $1);
+   };
 
-
+// SKIPPED:
+// REPLACE BY ATTRIBUTE_REF
 /* TYPE_ATTR */
 /* Either empty, or an apostrophe followed by identifier */
-TYPE_ATTR:
-   /* nothing */ | '\'' IDENT;
 
+// THIS IS EXPR_LIST - therefore redundant
 /* ACTUAL_PARAM_LIST */
 /* List of actual parameters (ACTUAL_PARAM) separated with commas */
-ACTUAL_PARAM_LIST:
-   ACTUAL_PARAM | ACTUAL_PARAM_LIST ',' ACTUAL_PARAM;
 
 /* ACTUAL_PARAM */
 /* Expression (EXPR) */
-ACTUAL_PARAM:
-   EXPR;
+
+// END OF SKIPPED
 
 /* FOR_LOOP */
 /* Keyword for, identifier, keyword in, range specification (RANGE_SPEC),
    keyword loop, instructions (STATEMENTS), keyword end, keyword loop,
    and semicolon */
 FOR_LOOP:
-    KW_FOR IDENT KW_IN RANGE_SPEC KW_LOOP STATEMENTS KW_END KW_LOOP ';' {
+   KW_FOR IDENT KW_IN RANGE_SPEC KW_LOOP STATEMENTS KW_END KW_LOOP ';' {
       found("FOR_LOOP", "");
-    };
+   };
 
 /* RANGE_SPEC */
 /* Either: identifier,
@@ -354,13 +348,14 @@ FOR_LOOP:
    with range operator */
 RANGE_SPEC:
    IDENT | EXPR RANGE EXPR | IDENT KW_RANGE EXPR RANGE EXPR;
-   // IDENT | EXPR RANGE EXPR | IDENT KW_RANGE IDENT RANGE IDENT;
 
 /* IF_STATEMENT */
 /* Keyword if, logical expression (LOGICAL_EXPR), keyword then, instructions
    (STATEMENTS), else part (ELSE_PART), keyword else, keyword if, semicolon */
 IF_STATEMENT:
-   KW_IF LOGICAL_EXPR KW_THEN STATEMENTS ELSE_PART KW_END KW_IF ';'; /* shouldn't this be KW_END instaed of KW_ELSE? */
+   KW_IF LOGICAL_EXPR KW_THEN STATEMENTS ELSE_PART KW_END KW_IF ';' {
+      found("IF_STATEMENT", "");
+   };
 
 /* LOGICAL_EXPR */
 /* Either a single expression (EXPR), or two expressions joined with logical
@@ -369,10 +364,10 @@ LOGICAL_EXPR:
    EXPR | EXPR LOGICAL_OPERATOR EXPR;
 
 /* LOGICAL_OPERATOR */
+/* LOGICAL_OPERATOR */
 /* Less than, more than, equal to, LE, and GE */
 LOGICAL_OPERATOR: 
    '<' | '>' | "==" | LE | GE;
-
 
 /* ELSE_PART */
 /* Either empty, or keword else followed by instructions (STATEMENTS) */
@@ -383,20 +378,18 @@ ELSE_PART:
 
 int main(void)
 { 
-	printf("Wojciech Trapkowski\n");
-	printf("yytext              Token type     Token value as string\n\n");
-	return yyparse();
+   printf("Wojciech Trapkowski\n");
+   printf("yytext              Token type     Token value as string\n\n");
+   return yyparse();
 }
 
 void yyerror(const char *txt)
 {
-	printf("Syntax error %s\n", txt);
+   printf("Syntax error %s\n", txt);
 }
-
-
 
 void found(const char *nonterminal, const char *value)
 {
-	printf( "===== FOUND: %s %s%s%s=====\n", nonterminal, 
-			(*value) ? "'" : "", value, (*value) ? "'" : "" );
+   printf("===== FOUND: %s %s%s%s=====\n", nonterminal, 
+          (*value) ? "'" : "", value, (*value) ? "'" : "");
 }

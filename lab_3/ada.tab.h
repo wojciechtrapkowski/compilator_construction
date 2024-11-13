@@ -112,7 +112,7 @@
 typedef union YYSTYPE
 #line 10 "ada.y"
 {
-  char s[ MAX_STR_LEN + 1 ];
+  char s[MAX_STR_LEN + 1];
   int i;
   double d;
 }
